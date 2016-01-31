@@ -4,8 +4,7 @@ library(DT)
 shinyUI(navbarPage("Alchemist",
   tabPanel("Data Exchanger",
     column(3,
-      fileInput("inputDataset", "Present Data File", width = '100%'),
-      selectInput("dataset", "Choose a dataset:", choices = c("rock", "pressure", "cars"))
+      fileInput("dataset", "Present Data File", width = '100%')
     ),
     column(6,
       dataTableOutput('table')
