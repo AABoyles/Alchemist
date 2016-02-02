@@ -3,8 +3,18 @@ library(DT)
 library(readr)
 library(readxl)
 library(haven)
+library(foreign)
 
 options(shiny.maxRequestSize = .2*1024^3)
+
+getName <- function(filename){
+  if(!is.character(filename)){
+    filename <- toString(filename)
+  }
+  parsed <- strsplit(filename, ".", TRUE)[[1]]
+  num    <- length(parsed)
+  return(tolower(parsed[1:num-1]))
+}
 
 getExtension <- function(filename){
   if(!is.character(filename)){
@@ -19,41 +29,62 @@ readFile <- function(path, extension="csv"){
   if(!is.character(path)){
     path <- toString(path)
   }
-  if(extension=="xls" || extension=="xlsx"){
-    return(read_excel(path))
-  }else if(extension=="csv"){
-    return(read_csv(path))
-  } else if(extension=="tsv"){
-    return(read_tsv(path))
-  } else if(extension=="dta"){
-    return(read_dta(path))
-  } else if(extension=="b7dat"){
-    return(read_sas(path))
+  switch(extension,
+    arff     = return(read.arff(path)),
+    csv      = return(read_csv(path)),
+    dbf      = return(read.dbf(path)),
+    dta      = return(read_dta(path)),
+    sasb7dat = return(read_sas(path)),
+    sav      = return(read_sav(path)),
+    tsv      = return(read_tsv(path)),
+    xls      = return(read_excel(path)),
+    xlsx     = return(read_excel(path)),
+    return(data.frame(readFile="This dataset is empty", extension=extension, path=path))
+  )
+}
+
+writeFile <- function(data, path, format="csv"){
+  if(!is.character(path)){
+    path <- toString(path)
   }
-  return(data.frame(readFile="This dataset is empty", extension=extension, path=path))
+  switch(format,
+    arff = return(write.arff(data, path)),
+    csv  = return(write_csv(data, path)),
+    dbf  = return(write.dbf(data, path)),
+    dta  = return(write_dta(data, path)),
+    rds  = return(write_rds(data, path)),
+    sav  = return(write_sav(data, path)),
+    tsv  = return(write_tsv(data, path)),
+    return(write_csv(data, path))
+  )
 }
 
 shinyServer(function(input, output) {
+
   datasetInput <- reactive({
     if("dataset" %in% names(input)){
       if("datapath" %in% names(input$dataset)){
-        extension<-getExtension(input$dataset$name[1])
+        extension <- getExtension(input$dataset$name[1])
         return(readFile(input$dataset$datapath[1], extension))
       }
+      return(input$dataset)
     }
-    return(input$dataset)
-    return(data.frame(datasetInput="This Data Frame is Empty"))
+    return(NULL)
   })
+  
+  output$fileUploaded <- reactive({
+    return(!is.null(datasetInput()))
+  })
+  outputOptions(output, 'fileUploaded', suspendWhenHidden=FALSE)
   
   output$table <- renderDataTable(datasetInput())
   
   output$downloadData <- downloadHandler(
     filename = function() {
-      meta <- datasetInput()
-      paste0(meta$name, '.csv')
+      paste(getName(input$dataset$name[1]), input$outputFormat, sep = ".")
     },
     content = function(file) {
-      datasetInput() %>% write_csv(file)
+      writeFile(datasetInput(), file, input$outputFormat)
     }
   )
 })
