@@ -30,17 +30,18 @@ readFile <- function(path, extension="csv"){
   switch(extension,
     arff     = return(read.arff(path)),
     csv      = return(read_csv(path)),
-    dat      = return(read_fwf(path, fwf_empty(path))),
+    dat      = return(read_table(path)),
     dbf      = return(read.dbf(path)),
     dta      = return(read_dta(path)),
-    fwf      = return(read_fwf(path, fwf_empty(path))),
+    fwf      = return(read_table(path)),
     sasb7dat = return(read_sas(path)),
     sav      = return(read_sav(path)),
+    spss     = return(read_spss(path)),
     tsv      = return(read_tsv(path)),
-    txt      = return(read_fwf(path, fwf_empty(path))),
+    txt      = return(read_table(path)),
     xls      = return(read_excel(path)),
     xlsx     = return(read_excel(path)),
-    return(data.frame(readFile="This dataset is empty", extension=extension, path=path))
+    return(data.frame(error="I don't understand this Dataset", extension=extension, path=path))
   )
 }
 
