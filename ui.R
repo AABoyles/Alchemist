@@ -14,8 +14,8 @@ shinyUI(navbarPage("Alchemist",
           )
         ),
         fluidRow(
-          selectInput('outputFormat', 'Output Format', outputFormats),
-          downloadButton('downloadData', 'Download Dataset')
+          column(6, tags$label("Output Data File"), downloadButton('downloadData', 'Download Dataset')),
+          column(6, selectInput('outputFormat', 'Output Format', outputFormats, selected = "csv"))
         )
       )
     )
