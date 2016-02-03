@@ -1,5 +1,3 @@
-library(shiny)
-library(DT)
 library(readr)
 library(readxl)
 library(haven)
@@ -32,11 +30,14 @@ readFile <- function(path, extension="csv"){
   switch(extension,
     arff     = return(read.arff(path)),
     csv      = return(read_csv(path)),
+    dat      = return(read_fwf(path, fwf_empty(path))),
     dbf      = return(read.dbf(path)),
     dta      = return(read_dta(path)),
+    fwf      = return(read_fwf(path, fwf_empty(path))),
     sasb7dat = return(read_sas(path)),
     sav      = return(read_sav(path)),
     tsv      = return(read_tsv(path)),
+    txt      = return(read_fwf(path, fwf_empty(path))),
     xls      = return(read_excel(path)),
     xlsx     = return(read_excel(path)),
     return(data.frame(readFile="This dataset is empty", extension=extension, path=path))
@@ -59,13 +60,22 @@ writeFile <- function(data, path, format="csv"){
   )
 }
 
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
 
   datasetInput <- reactive({
     if("dataset" %in% names(input)){
       if("datapath" %in% names(input$dataset)){
-        extension <- getExtension(input$dataset$name[1])
-        return(readFile(input$dataset$datapath[1], extension))
+        if(input$inputFormat=="Best Guess"){
+          extension <- getExtension(input$dataset$name[1])
+        } else {
+          extension <- input$inputFormat
+        }
+        if(! extension %in% inputFormats){
+          formats <- paste(inputFormats, collapse=", ")
+          createAlert(session, "invalidInputFormatAlert", style="warning", title="Oops!", content=paste0("Sorry, the only formats I understand right now are ", formats), append=FALSE)
+        } else {
+          return(readFile(input$dataset$datapath[1], extension))
+        }
       }
       return(input$dataset)
     }
