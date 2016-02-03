@@ -1,13 +1,11 @@
-library(shiny)
-library(shinyBS)
-library(DT)
-
 shinyUI(navbarPage("Alchemist",
   tabPanel("Data Transmutation",
     column(6, offset = 3,
       fluidRow(
-        fileInput("dataset", "Input Data File", width = '100%')
+        column(6, fileInput("dataset", "Input Data File", width = '100%')),
+        column(6, selectInput('inputFormat', 'Input Format', inputFormats, selected="Best Guess"))
       ),
+      bsAlert("invalidInputFormatAlert"),
       conditionalPanel(
         condition = "output.fileUploaded",
         fluidRow(
@@ -16,7 +14,7 @@ shinyUI(navbarPage("Alchemist",
           )
         ),
         fluidRow(
-          selectInput('outputFormat', 'Output Format', c('arff', 'csv', 'dbf', 'dta', 'rds', 'sav', 'tsv')),
+          selectInput('outputFormat', 'Output Format', outputFormats),
           downloadButton('downloadData', 'Download Dataset')
         )
       )
